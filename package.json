@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/Georgegig/nbu-altcoin-portfolio/issues"
   },
-  "homepage": "https://github.com/Georgegig/nbu-altcoin-portfolio#readme"
+  "homepage": "https://github.com/Georgegig/nbu-altcoin-portfolio#readme",
+  "dependencies": {
+    "vue": "^2.5.13"
+  }
 }
