@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/Georgegig/nbu-altcoin-portfolio#readme",
   "dependencies": {
-    "vue": "^2.5.13"
+    "vue": "^2.5.13",
+    "vuetify": "^0.17.5"
   }
 }
