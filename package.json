@@ -1,0 +1,23 @@
+{
+  "name": "nbu-altcoin-portfolio",
+  "version": "0.0.1",
+  "description": "Portfolio management single page application for crypto currencies",
+  "main": "index.html",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Georgegig/nbu-altcoin-portfolio.git"
+  },
+  "keywords": [
+    "crypto",
+    "currencies"
+  ],
+  "author": "Georgi Ivanov Georgiev",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Georgegig/nbu-altcoin-portfolio/issues"
+  },
+  "homepage": "https://github.com/Georgegig/nbu-altcoin-portfolio#readme"
+}
