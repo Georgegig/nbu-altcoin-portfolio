@@ -18,10 +18,15 @@ let FooterComponent = Vue.component('footer-component',{
 
 let NavigationComponent = Vue.component('nav-component', {
     template: `
-    <v-toolbar class="white">
+    <v-toolbar class="white" @click.native="homePage()">
       <v-toolbar-title v-text="title"></v-toolbar-title>
     </v-toolbar>`,
-    props:['title']
+    props:['title'],
+    methods: {
+        homePage() {
+            this.$router.push('/');
+        }
+    }
 });
 
 let LoginComponent = Vue.component('login-component', {
@@ -75,17 +80,25 @@ let GettingStartedView = {
 };
 
 let LoginView = {
-    template: `<v-form v-model="valid">
-        <v-text-field label="Name" v-model="name" :rules="nameRules" :counter="20" required></v-text-field>
-        <v-text-field label="E-mail" v-model="email" :rules="emailRules" required></v-text-field>
-    </v-form>`,
+    template: `
+    <v-container>
+        <v-layout row wrap>
+            <v-flex xs-12>   
+                <v-form v-model="valid" ref="form">
+                    <v-text-field label="E-mail" v-model="email" :rules="emailRules" required></v-text-field>
+                    <v-text-field label="Password" v-model="password" :rules="passwordRules" required></v-text-field>
+                    <v-btn @click="login()" :disabled="!valid" color="primary" white--text><b>LOG IN</b></v-btn>
+                    <v-btn @click="clear()">clear</v-btn>
+                </v-form>
+            </v-flex>
+        </v-layout>
+    </v-container>`,
     data () {
         return {
             valid: false,
-            name: '',
-            nameRules: [
-                (v) => !!v || 'Name is required',
-                (v) => v.length <= 20 || 'Name must be less than 10 characters'
+            password: '',
+            passwordRules: [
+                (v) => !!v || 'Password is required'
             ],
             email: '',
             emailRules: [
@@ -93,6 +106,18 @@ let LoginView = {
                 (v) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
             ]
         }
+    },
+    methods:{
+        login() {
+            debugger;
+            if (this.$refs.form.validate()) {
+              // Native form submission is not yet supported
+              
+            }
+          },
+          clear() {
+            this.$refs.form.reset()
+          }
     }
 };
 
