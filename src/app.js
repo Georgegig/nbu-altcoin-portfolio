@@ -27,24 +27,22 @@ let NavigationComponent = Vue.component('nav-component', {
 let LoginComponent = Vue.component('login-component', {
     template:`
     <v-card>
-    <v-card-title class="headline">Use Google's location service?</v-card-title>
-    <v-card-text>Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.</v-card-text>
+    <v-card-title class="headline">Do you have an account?</v-card-title>
     <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="green darken-1" flat @click.native="closeDialog()">Disagree</v-btn>
-        <v-btn color="green darken-1" flat @click.native="closeDialog()">Agree</v-btn>
+        <v-btn color="blue darken-1" flat @click.native="register()">Register</v-btn>
+        <v-btn color="blue darken-1" flat @click.native="login()">Log in</v-btn>
     </v-card-actions>
     </v-card>`,
     props:['dialog'],
-    data () {
-        return {
-            mutableDialog: this.dialog
-        }
-    },
     methods: {
-        closeDialog(){
-            this.mutableDialog = false;
+        register(){
             this.$eventHub.$emit('closeLoginDialog');
+            this.$router.push('/register');
+        },
+        login (){
+            this.$eventHub.$emit('closeLoginDialog');
+            this.$router.push('/login');
         }
     }
 });
@@ -59,7 +57,7 @@ let GettingStartedView = {
         <div class="subheading mb-3 text-xs-center">Powered by Vuetify</div>
         <v-dialog v-model="dialog" persistent max-width="600">
             <v-btn color="primary" dark slot="activator">Open Dialog</v-btn>
-            <login-component v-bind:dialog="dialog"></login-component>
+            <login-component></login-component>
         </v-dialog>
         </v-layout>
         </v-parallax>
@@ -98,10 +96,71 @@ let LoginView = {
     }
 };
 
+let RegisterView = {
+    template: `
+    <v-container>
+        <v-layout row wrap>
+            <v-flex xs-12>   
+                <v-form v-model="valid" ref="form">
+                    <v-text-field label="Name" v-model="name" :rules="nameRules" :counter="20" required></v-text-field>
+                    <v-text-field label="E-mail" v-model="email" :rules="emailRules" required></v-text-field>
+                    <v-text-field label="Password" v-model="password" :rules="passwordRules" :counter="8" required></v-text-field>
+                    <v-text-field label="Repeat Password" v-model="repeatedPassword" :rules="repeatedPasswordRules" required></v-text-field>
+                </v-form>
+                <v-btn @click="register()" :disabled="!valid" color="primary" white--text><b>REGISTER</b></v-btn>
+                <v-btn @click="clear()">clear</v-btn>
+            </v-flex>
+        </v-layout>
+    </v-container>`,
+    data () {
+        return {
+            valid: true,
+            name: '',
+            nameRules: [
+                (v) => !!v || 'Name is required',
+                (v) => v.length <= 20 || 'Name must be less than 10 characters'
+            ],
+            email: '',
+            emailRules: [
+                (v) => !!v || 'E-mail is required',
+                (v) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
+            ],
+            password: '',
+            passwordRules: [
+                (v) => !!v || 'Password is requred',
+                (v) => v.length >= 8 || "Password must be atleast 8 characters long",
+                (v) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/.test(v) || `
+                Password must must contain at least 1 lowercase alphabetical character, 
+                1 uppercase alphabetical character, 
+                1 numeric character 
+                and 1 special character`
+            ],
+            repeatedPassword: '',
+            repeatedPasswordRules: [
+                (v) => !!v || 'Please repeat your password',
+                (v) => this.password == v || 'Passwords do not match'
+            ]
+        }
+    },
+    methods:{
+        register() {
+            debugger;
+            if (this.$refs.form.validate()) {
+              // Native form submission is not yet supported
+              
+            }
+          },
+          clear() {
+            this.$refs.form.reset()
+          }
+    }
+};
+
 //ROUTING
 const routes = [
     { path: '/', name: "GettingStarted", component: GettingStartedView },
     { path: '/login', name: "Login", component: LoginView },
+    { path: '/register', name: "Register", component: RegisterView },
     { path: '*', redirect: '/'}
 ];
 

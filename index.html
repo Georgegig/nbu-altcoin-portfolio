@@ -9,12 +9,18 @@
 </head>
 <body>
     <div id="portoflio-app">
-        <v-app light>        
+        <v-app light>   
             <v-content>
-            <nav-component v-bind:title="title"></nav-component>
-            <router-view></router-view> 
-            <footer-component></footer-component>    
-            </v-content>       
+                <nav>                            
+                    <nav-component v-bind:title="title"></nav-component>
+                </nav>                
+                <main>                      
+                    <router-view></router-view>  
+                </main> 
+                <footer>
+                    <footer-component></footer-component>  
+                </footer>  
+            </v-content>        
         </v-app>
     </div>    
     <!--Libs-->
