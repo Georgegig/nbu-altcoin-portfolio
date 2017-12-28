@@ -1,5 +1,11 @@
 'use strict';
 
+Date.prototype.addDays = function(days) {
+    var dat = new Date(this.valueOf());
+    dat.setDate(dat.getDate() + days);
+    return dat;
+  };
+
 //COMPONENTS
 let FooterComponent = Vue.component('footer-component',{
     template:`<v-footer class="blue darken-2">
@@ -9,7 +15,6 @@ let FooterComponent = Vue.component('footer-component',{
           Made with
           <v-icon class="red--text">favorite</v-icon>
           by <a class="white--text" href="https://vuetifyjs.com" target="_blank">Vuetify</a>
-          and <a class="white--text" href="https://github.com/vwxyzjn">Costa Huang</a>
         </div>
       </v-flex>
     </v-layout>
@@ -54,19 +59,77 @@ let LoginComponent = Vue.component('login-component', {
 
 //VIEWS
 let GettingStartedView = {
-    template:`<section>
-    <v-parallax src="assets/hero.jpeg" height="600">
-      <v-layout column align-center justify-center class="white--text">
-        <img src="assets/vuetify.png" alt="Vuetify.js" height="200">
-        <h1 class="white--text mb-2 display-1 text-xs-center">Parallax Template</h1>
-        <div class="subheading mb-3 text-xs-center">Powered by Vuetify</div>
-        <v-dialog v-model="dialog" persistent max-width="600">
-            <v-btn color="primary" dark slot="activator">Open Dialog</v-btn>
-            <login-component></login-component>
-        </v-dialog>
-        </v-layout>
+    template:`
+    <section>
+        <v-parallax src="assets/hero.jpeg" height="300">
+            <v-card class="elevation-0 blue">
+                <v-card-title primary-title class="layout justify-center white--text">
+                    <div class="headline text-xs-center">The best way to monitor your portfolio</div>
+                </v-card-title>
+                <v-card-text class="layout justify-center white--text">
+                    Multifunctional and easy. 
+                </v-card-text>
+            </v-card>
         </v-parallax>
-    </section>`,
+        <v-layout column wrap class="my-5" align-center>
+            <v-flex xs12>
+                <v-container grid-list-xl>
+                    <v-layout row wrap align-center>
+                        <v-flex xs12 md4>
+                            <v-card class="elevation-0 transparent">
+                            <v-card-text class="text-xs-center">
+                                <v-icon x-large class="blue--text text--lighten-2">color_lens</v-icon>
+                            </v-card-text>
+                            <v-card-title primary-title class="layout justify-center">
+                                <div class="headline text-xs-center">Material Design</div>
+                            </v-card-title>
+                            <v-card-text>
+                                Platform based on material design and flex box containers. Responsive and fully customizable. 
+                            </v-card-text>
+                            </v-card>
+                        </v-flex>
+                        <v-flex xs12 md4>
+                            <v-card class="elevation-0 transparent">
+                            <v-card-text class="text-xs-center">
+                                <v-icon x-large class="blue--text text--lighten-2">flash_on</v-icon>
+                            </v-card-text>
+                            <v-card-title primary-title class="layout justify-center">
+                                <div class="headline">Easy to use</div>
+                            </v-card-title>
+                            <v-card-text>
+                                Get started under 5 minutes
+                            </v-card-text>
+                            </v-card>
+                        </v-flex>
+                        <v-flex xs12 md4>
+                            <v-card class="elevation-0 transparent">
+                            <v-card-text class="text-xs-center">
+                                <v-icon x-large class="blue--text text--lighten-2">build</v-icon>
+                            </v-card-text>
+                            <v-card-title primary-title class="layout justify-center">
+                                <div class="headline text-xs-center">Completely Open Sourced</div>
+                            </v-card-title>
+                            <v-card-text>
+                                Developed using only open source frameworks. Code could be found on <a href="https://github.com/Georgegig/nbu-altcoin-portfolio">Altcoin Portfolio</a> 
+                            </v-card-text>
+                            </v-card>
+                        </v-flex>
+                    </v-layout>
+                </v-container>
+            </v-flex>
+        </v-layout>
+        <v-parallax src="assets/section.jpg" height="380">
+            <v-layout column align-center justify-center>
+                <v-layout column align-center justify-center class="white--text"> 
+                    <v-dialog v-model="dialog" persistent max-width="600">
+                        <v-btn color="blue" dark slot="activator">Get started right away</v-btn>
+                        <login-component></login-component>
+                    </v-dialog>
+                </v-layout>
+                </v-layout>
+        </v-parallax>
+    </section>
+    `,
     data () {
         return {
             dialog: false
@@ -84,18 +147,28 @@ let LoginView = {
     <v-container>
         <v-layout row wrap>
             <v-flex xs-12>   
-                <v-form v-model="valid" ref="form">
+                <v-form v-model="valid" ref="form" v-show="!successfulLogin">
                     <v-text-field label="E-mail" v-model="email" :rules="emailRules" required></v-text-field>
                     <v-text-field label="Password" v-model="password" :rules="passwordRules" required></v-text-field>
+                    <v-checkbox label="Do you agree?" v-model="rememberMe"></v-checkbox>
                     <v-btn @click="login()" :disabled="!valid" color="primary" white--text><b>LOG IN</b></v-btn>
                     <v-btn @click="clear()">clear</v-btn>
                 </v-form>
+                <v-alert color="success" icon="check_circle" value="true" v-show="successfulLogin">
+                    Successfully logged in. Redirecting to portfolio page.
+                </v-alert>
+                <v-alert color="error" icon="warning" value="true" v-show="unsuccessfulLogin">
+                    Specified email or password is wrong.
+                </v-alert>
             </v-flex>
         </v-layout>
     </v-container>`,
     data () {
         return {
             valid: false,
+            successfulLogin: false,
+            unsuccessfulLogin: false,
+            rememberMe: false,
             password: '',
             passwordRules: [
                 (v) => !!v || 'Password is required'
@@ -111,13 +184,54 @@ let LoginView = {
         login() {
             debugger;
             if (this.$refs.form.validate()) {
+                this.successfulLogin = false;
+                this.unsuccessfulLogin = false;
               // Native form submission is not yet supported
-              
+                if(validateEmailAndPassword(this.email, this.password)){
+                    if(this.rememberMe){
+                        let thirtyDaysPeriod = (new Date()).addDays(30).toUTCString();
+                        document.cookie = "email=${this.email};expires=${thirtyDaysPeriod};"
+                        this.successfulLogin = true;
+                    }
+                    else{
+                        document.cookie = "email=${this.email};"       
+                        this.successfulLogin = true;                 
+                    }
+                }
+                else{
+                    this.unsuccessfulLogin = true;
+                }
             }
           },
           clear() {
             this.$refs.form.reset()
+            this.successfulLogin = false;
+            this.unsuccessfulLogin = false;
           }
+    }
+};
+
+let usersTableContainsEmail = function(email){
+    let usersTable = JSON.parse(localStorage.getItem('usersTable'));
+    if(!usersTable){
+        return false;
+    }
+    for(var i = 0; i < usersTable.length; i++){
+        if(usersTable[i].email == email){
+            return true;
+        }
+    }
+};
+
+let validateEmailAndPassword = function(email, password){
+    let usersTable = JSON.parse(localStorage.getItem('usersTable'));
+    if(!usersTable){
+        return false;
+    }
+    for(var i = 0; i < usersTable.length; i++){
+        if(usersTable[i].email == email && usersTable[i].password == password){
+            return true;
+        }
     }
 };
 
@@ -148,7 +262,9 @@ let RegisterView = {
             email: '',
             emailRules: [
                 (v) => !!v || 'E-mail is required',
-                (v) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
+                (v) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid',
+                (v) => JSON.parse(localStorage.getItem('usersTable')) ? 
+                     usersTableContainsEmail(v) ? 'E-mail already exists' : true : true
             ],
             password: '',
             passwordRules: [
@@ -172,7 +288,19 @@ let RegisterView = {
             debugger;
             if (this.$refs.form.validate()) {
               // Native form submission is not yet supported
-              
+              let usersTable = JSON.parse(localStorage.getItem('usersTable'));
+              if (!usersTable){
+                  usersTable = [];
+              }
+
+              usersTable.push({
+                  name: this.name,
+                  email: this.email,
+                  password: this.password
+              })
+
+              localStorage.setItem('usersTable', JSON.stringify(usersTable));
+              this.$router.push('/login');
             }
           },
           clear() {
