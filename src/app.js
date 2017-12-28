@@ -61,7 +61,7 @@ let userLoggedIn = () => {
 
 //COMPONENTS
 let FooterComponent = Vue.component('footer-component',{
-    template:`<v-footer class="blue darken-2">
+    template:`<v-footer class="blue darken-2" absolute bottom>
     <v-layout row wrap align-center>
       <v-flex xs12>
         <div class="white--text ml-3">
@@ -378,11 +378,56 @@ let RegisterView = {
 };
 
 let PortfolioView = {
-    template: `<section>PORTFOLIOOOO</section>`,
+    template: `
+    <v-container grid-list-md text-xs-center>
+        <v-layout row wrap>
+            <v-flex xs12>
+                <v-card class="grey lighten-4">
+                    <v-card-text class="px-0"><h2><b>Total amount: {{amount}}</b></h2></v-card-text>
+                </v-card>
+            </v-flex>
+        </v-layout>
+        <v-layout row justify-center>
+            <v-dialog v-model="addCoinDialog" scrollable max-width="300px">
+                <v-btn dark fab color="blue" center slot="activator">
+                    <v-icon>add</v-icon>
+                </v-btn>
+                <v-card>
+                    <v-card-title>Select Coin</v-card-title>
+                    <v-divider></v-divider>
+                    <v-card-text style="height: 300px;">
+                        <div style="cursor:pointer;" v-for="coin in coins" :key="coin.id">
+                            <v-divider></v-divider>
+                            <h2><b>{{coin.rank}}. {{coin.name}}</b></h2>
+                            <v-divider></v-divider>
+                        </div>
+                    </v-card-text>
+                </v-card>
+            </v-dialog>
+            
+            <!-- <v-flex xs12 v-for="coin in coins" :key="coin.id">
+                <v-card class="grey lighten-4">
+                    <v-card-text class="px-0"><h2><b>{{coin.rank}}. {{coin.name}}</b></h2></v-card-text>
+                </v-card>
+            </v-flex> -->
+        </v-layout>
+    </v-container>`,
     data() {
         return {
-
+            amount: 120,
+            coins: [],
+            addCoinDialog: false
         }
+    },
+    mounted(){
+        this.$http.get('https://api.coinmarketcap.com/v1/ticker/?start=0&limit=1400').then(
+            (data) => {
+                this.coins = data.body;
+            },
+            (err) => {
+                console.log(err);
+            }
+        )
     }
 }
 
