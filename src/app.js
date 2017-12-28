@@ -6,15 +6,66 @@ Date.prototype.addDays = function(days) {
     return dat;
   };
 
+//HELPERS
+
+let usersTableContainsEmail = (email) => {
+    let usersTable = JSON.parse(localStorage.getItem('usersTable'));
+    if(!usersTable){
+        return false;
+    }
+    for(var i = 0; i < usersTable.length; i++){
+        if(usersTable[i].email == email){
+            return true;
+        }
+    }
+};
+
+let validateEmailAndPassword = (email, password) => {
+    let usersTable = JSON.parse(localStorage.getItem('usersTable'));
+    if(!usersTable){
+        return false;
+    }
+    for(var i = 0; i < usersTable.length; i++){
+        if(usersTable[i].email == email && usersTable[i].password == password){
+            return true;
+        }
+    }
+};
+
+let getUsername = (email, password) => {
+    let usersTable = JSON.parse(localStorage.getItem('usersTable'));
+    if(!usersTable){
+        return "";
+    }
+    for(var i = 0; i < usersTable.length; i++){
+        if(usersTable[i].email == email && usersTable[i].password == password){
+            return usersTable[i].name;
+        }
+    }
+;}
+
+let userLoggedIn = () => {
+    var user = JSON.parse(localStorage.getItem('user'));
+    if(user){
+        if(user.timeStamp && 
+        ((new Date(user.timeStamp)).addDays(1)).getTime() > (new Date()).getTime()){
+            return true;
+        }
+        else{
+            localStorage.removeItem('user');
+            return false;
+        }
+    }
+    return false;
+};
+
 //COMPONENTS
 let FooterComponent = Vue.component('footer-component',{
     template:`<v-footer class="blue darken-2">
     <v-layout row wrap align-center>
       <v-flex xs12>
         <div class="white--text ml-3">
-          Made with
-          <v-icon class="red--text">favorite</v-icon>
-          by <a class="white--text" href="https://vuetifyjs.com" target="_blank">Vuetify</a>
+          Made with <a class="white--text" href="https://vuetifyjs.com" target="_blank">Vuetify</a>
         </div>
       </v-flex>
     </v-layout>
@@ -23,13 +74,53 @@ let FooterComponent = Vue.component('footer-component',{
 
 let NavigationComponent = Vue.component('nav-component', {
     template: `
-    <v-toolbar class="white" @click.native="homePage()">
-      <v-toolbar-title v-text="title"></v-toolbar-title>
+    <v-toolbar class="white">                  
+        <span v-on:click="homePage()"><h1 style="cursor:pointer;" class="title" v-text="title"></h1></span>
+        <v-spacer></v-spacer>
+        <v-toolbar-side-icon class="hidden-md-and-up"></v-toolbar-side-icon>
+        <span><h1 v-text="loggedUser"></h1></span>
+        <v-toolbar-items class="hidden-sm-and-down">
+            <v-btn flat v-show="userLoggedIn" @click.native="logout()">Log out</v-btn>
+            <v-btn flat v-show="!userLoggedIn" @click.native="login()">Log in</v-btn>
+            <v-btn flat v-show="!userLoggedIn" @click.native="register()">Register</v-btn>
+        </v-toolbar-items>
     </v-toolbar>`,
     props:['title'],
+    data(){
+        return {
+            userLoggedIn: false,
+            loggedUser: ''
+        }
+    },
+    mounted() {
+        this.loginStatus();
+        this.$eventHub.$on('loginChange', () => {
+            this.loginStatus();
+        });
+    },
     methods: {
         homePage() {
+            debugger;
             this.$router.push('/');
+        },
+        login(){
+            this.$router.push('/login');
+        },
+        logout(){
+            localStorage.removeItem('user');
+            this.$eventHub.$emit('loginChange');
+        },
+        register(){
+            this.$router.push('/register');
+        },
+        loginStatus(){
+            this.userLoggedIn = userLoggedIn();
+            if(this.userLoggedIn){
+                this.loggedUser = JSON.parse(localStorage.getItem('user')).name;
+            }
+            else{
+                this.loggedUser = '';
+            }
         }
     }
 });
@@ -150,7 +241,6 @@ let LoginView = {
                 <v-form v-model="valid" ref="form" v-show="!successfulLogin">
                     <v-text-field label="E-mail" v-model="email" :rules="emailRules" required></v-text-field>
                     <v-text-field label="Password" v-model="password" :rules="passwordRules" required></v-text-field>
-                    <v-checkbox label="Do you agree?" v-model="rememberMe"></v-checkbox>
                     <v-btn @click="login()" :disabled="!valid" color="primary" white--text><b>LOG IN</b></v-btn>
                     <v-btn @click="clear()">clear</v-btn>
                 </v-form>
@@ -168,7 +258,6 @@ let LoginView = {
             valid: false,
             successfulLogin: false,
             unsuccessfulLogin: false,
-            rememberMe: false,
             password: '',
             passwordRules: [
                 (v) => !!v || 'Password is required'
@@ -188,15 +277,18 @@ let LoginView = {
                 this.unsuccessfulLogin = false;
               // Native form submission is not yet supported
                 if(validateEmailAndPassword(this.email, this.password)){
-                    if(this.rememberMe){
-                        let thirtyDaysPeriod = (new Date()).addDays(30).toUTCString();
-                        document.cookie = "email=${this.email};expires=${thirtyDaysPeriod};"
-                        this.successfulLogin = true;
-                    }
-                    else{
-                        document.cookie = "email=${this.email};"       
-                        this.successfulLogin = true;                 
-                    }
+                    let loginDate = new Date();
+                    let user = {
+                        name: getUsername(this.email, this.password),
+                        email: this.email,
+                        timeStamp:  loginDate.getFullYear() + '-' + (loginDate.getMonth() + 1) + '-' + loginDate.getDate()
+                    };
+                    localStorage.setItem('user', JSON.stringify(user));
+                    this.successfulLogin = true;
+                    setTimeout(() => {
+                        this.$router.push('/portfolio');
+                    }, 1500)
+                    this.$eventHub.$emit('loginChange');
                 }
                 else{
                     this.unsuccessfulLogin = true;
@@ -208,30 +300,6 @@ let LoginView = {
             this.successfulLogin = false;
             this.unsuccessfulLogin = false;
           }
-    }
-};
-
-let usersTableContainsEmail = function(email){
-    let usersTable = JSON.parse(localStorage.getItem('usersTable'));
-    if(!usersTable){
-        return false;
-    }
-    for(var i = 0; i < usersTable.length; i++){
-        if(usersTable[i].email == email){
-            return true;
-        }
-    }
-};
-
-let validateEmailAndPassword = function(email, password){
-    let usersTable = JSON.parse(localStorage.getItem('usersTable'));
-    if(!usersTable){
-        return false;
-    }
-    for(var i = 0; i < usersTable.length; i++){
-        if(usersTable[i].email == email && usersTable[i].password == password){
-            return true;
-        }
     }
 };
 
@@ -309,11 +377,21 @@ let RegisterView = {
     }
 };
 
+let PortfolioView = {
+    template: `<section>PORTFOLIOOOO</section>`,
+    data() {
+        return {
+
+        }
+    }
+}
+
 //ROUTING
 const routes = [
     { path: '/', name: "GettingStarted", component: GettingStartedView },
     { path: '/login', name: "Login", component: LoginView },
     { path: '/register', name: "Register", component: RegisterView },
+    { path: '/portfolio', name: "Portfolio", component: PortfolioView },
     { path: '*', redirect: '/'}
 ];
 
@@ -328,7 +406,7 @@ let vm = new Vue({
     el: '#portoflio-app',
     data () {
         return {
-            title: 'Your Logo'
+            title: 'nbu-altcoin-portfolio'
         }
     }
 });
