@@ -383,20 +383,21 @@ let PortfolioView = {
         <v-layout row wrap>
             <v-flex xs12>
                 <v-card class="grey lighten-4">
-                    <v-card-text class="px-0"><h2><b>Total amount: {{amount}}</b></h2></v-card-text>
+                    <v-card-text class="px-0"><h2><b>Total amount: {{totalAmount}} USD</b></h2></v-card-text>
                 </v-card>
             </v-flex>
         </v-layout>
         <v-layout row justify-center>
-            <v-dialog v-model="addCoinDialog" scrollable max-width="300px">
+            <v-dialog v-model="selectCoinDialog" scrollable max-width="600px">
                 <v-btn dark fab color="blue" center slot="activator">
                     <v-icon>add</v-icon>
                 </v-btn>
                 <v-card>
                     <v-card-title>Select Coin</v-card-title>
                     <v-divider></v-divider>
-                    <v-card-text style="height: 300px;">
-                        <div style="cursor:pointer;" v-for="coin in coins" :key="coin.id">
+                    <v-card-text style="height: 500px;">
+                        <v-text-field label="Filter" single-line v-model="filter"></v-text-field>
+                        <div style="cursor:pointer;" v-on:click="addCoin(coin)" v-for="coin in coins" :key="coin.id">
                             <v-divider></v-divider>
                             <h2><b>{{coin.rank}}. {{coin.name}}</b></h2>
                             <v-divider></v-divider>
@@ -404,30 +405,97 @@ let PortfolioView = {
                     </v-card-text>
                 </v-card>
             </v-dialog>
-            
-            <!-- <v-flex xs12 v-for="coin in coins" :key="coin.id">
-                <v-card class="grey lighten-4">
-                    <v-card-text class="px-0"><h2><b>{{coin.rank}}. {{coin.name}}</b></h2></v-card-text>
+            <v-dialog v-model="addCoinDialog" scrollable max-width="600px">
+                <v-card>
+                    <v-card-title><h2><b>{{selectedCoin.name}}</b></h2></v-card-title>
+                    <v-divider></v-divider>
+                    <v-card-text style="height: 500px;">
+                        <v-form v-model="valid" ref="form">
+                            <v-text-field label="Amount" v-model="selectedCoin.amount" :rules="amountRules" required></v-text-field>
+                            <v-btn @click="add()" :disabled="!valid" color="primary" white--text><b>Add</b></v-btn>
+                            <v-btn @click="selectCoin()">Go back</v-btn>
+                        </v-form>
+                    </v-card-text>
                 </v-card>
-            </v-flex> -->
+            </v-dialog>
         </v-layout>
     </v-container>`,
     data() {
         return {
-            amount: 120,
+            totalAmount: 0,
+            allCoins: [],
             coins: [],
-            addCoinDialog: false
+            selectCoinDialog: false,
+            addCoinDialog: false,
+            filter: '',
+            selectedCoin: {},
+            valid: true,
+            amountRules: [
+                (v) => !!v || 'Amount is required'
+            ],
+            portfolio: []
         }
     },
     mounted(){
+        this.portfolio = JSON.parse(localStorage.getItem('portfolio'));
+
+        this.refreshTotalAmount();
+
         this.$http.get('https://api.coinmarketcap.com/v1/ticker/?start=0&limit=1400').then(
             (data) => {
-                this.coins = data.body;
+                this.allCoins = data.body;
+                this.coins = this.allCoins;
             },
             (err) => {
                 console.log(err);
             }
         )
+    },
+    watch: {
+      filter: function(newFilter) {
+          debugger;
+        this.filterCollection()
+      }
+    },
+    methods: {
+        filterCollection(){
+            this.coins = _.filter(this.allCoins, (el) => {
+                return _.includes(el.name.toLowerCase(), this.filter.toLowerCase());
+            });
+        },
+        addCoin(c) {
+            this.selectedCoin.name = c.name;
+            this.selectCoinDialog = false;
+            this.addCoinDialog = true;
+        },
+        selectCoin() {
+            this.selectedCoin = {};
+            this.selectCoinDialog = true;
+            this.addCoinDialog = false;
+        },
+        add() {
+            if (this.$refs.form.validate()) {                
+                console.log(this.selectedCoin);
+            }
+        },
+        refreshTotalAmount() {            
+            if(this.portfolio){
+                for(var i = 0; i < this.portfolio.length; i++){
+                    this.$http.get(`https://api.coinmarketcap.com/v1/ticker/${this.portfolio[i].id}/`)
+                    .then(
+                        (data) => {
+                            debugger;
+                            let currentCoin = _.find(this.portfolio, (el) => {
+                                return el.id == data.body[0].id;
+                            })
+                            this.totalAmount += parseInt(currentCoin.amount) * parseFloat(data.body[0]["price_usd"]);
+                        },
+                        (err) => {
+                            console.log(err);
+                        });
+                }
+            }
+        }
     }
 }
 
