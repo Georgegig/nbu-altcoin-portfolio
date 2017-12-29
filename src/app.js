@@ -59,6 +59,52 @@ let userLoggedIn = () => {
     return false;
 };
 
+let updateUserPortfolio = (newPortfolio) => {
+    let portfolioTable = JSON.parse(localStorage.getItem('portfolioTable')) ? 
+        JSON.parse(localStorage.getItem('portfolioTable')): [];
+    let user = JSON.parse(localStorage.getItem('user'));
+    let userPortfolioIndex = portfolioTable ? _.findIndex(portfolioTable, (el) => {
+        return el.user == user.email;
+    }) : -1;
+    if(userPortfolioIndex != -1){
+        portfolioTable[userPortfolioIndex].portfolio = newPortfolio;
+    }
+    else {
+        portfolioTable.push({
+            user: user.email,
+            portfolio: newPortfolio
+        });
+    }
+    localStorage.setItem('portfolioTable', JSON.stringify(portfolioTable));
+};
+
+let getUserPortfolio = () => {           
+    let portfolioTable = JSON.parse(localStorage.getItem('portfolioTable'));
+    let user = JSON.parse(localStorage.getItem('user'));
+    let userPortfolioIndex = portfolioTable ? _.findIndex(portfolioTable, (el) => {
+        return el.user == user.email;
+    }) : -1;
+    if(userPortfolioIndex != -1){
+        return portfolioTable[userPortfolioIndex].portfolio;
+    }
+    else {
+        return null;
+    }
+};
+
+let deleteUserPortfolio = () => {
+    let portfolioTable = JSON.parse(localStorage.getItem('portfolioTable')) ? 
+        JSON.parse(localStorage.getItem('portfolioTable')): [];
+    let user = JSON.parse(localStorage.getItem('user'));
+    let userPortfolioIndex = portfolioTable ? _.findIndex(portfolioTable, (el) => {
+        return el.user == user.email;
+    }) : -1;
+    if(userPortfolioIndex != -1){
+        portfolioTable[userPortfolioIndex].portfolio = [];
+        localStorage.setItem('portfolioTable', JSON.stringify(portfolioTable));
+    }
+};
+
 //COMPONENTS
 let FooterComponent = Vue.component('footer-component',{
     template:`<v-footer class="blue darken-2" absolute bottom>
@@ -498,56 +544,13 @@ let PortfolioView = {
                     this.portfolio[coinIndex].amount = (parseFloat(this.portfolio[coinIndex].amount) +
                         parseFloat(this.selectedCoin.amount)).toFixed(2);
                 }
-                this.updateUserPortfolio(this.portfolio);
+                updateUserPortfolio(this.portfolio);
                 this.refreshPortfolio();
                 this.addCoinDialog = false;
             }
         },
-        updateUserPortfolio(newPortfolio) {
-            let portfolioTable = JSON.parse(localStorage.getItem('portfolioTable')) ? 
-                JSON.parse(localStorage.getItem('portfolioTable')): [];
-            let user = JSON.parse(localStorage.getItem('user'));
-            let userPortfolioIndex = portfolioTable ? _.findIndex(portfolioTable, (el) => {
-                return el.user == user.email;
-            }) : -1;
-            if(userPortfolioIndex != -1){
-                portfolioTable[userPortfolioIndex].portfolio = newPortfolio;
-            }
-            else {
-                portfolioTable.push({
-                    user: user.email,
-                    portfolio: newPortfolio
-                });
-            }
-            localStorage.setItem('portfolioTable', JSON.stringify(portfolioTable));
-        },
-        getUserPortfolio() {           
-            let portfolioTable = JSON.parse(localStorage.getItem('portfolioTable'));
-            let user = JSON.parse(localStorage.getItem('user'));
-            let userPortfolioIndex = portfolioTable ? _.findIndex(portfolioTable, (el) => {
-                return el.user == user.email;
-            }) : -1;
-            if(userPortfolioIndex != -1){
-                return portfolioTable[userPortfolioIndex].portfolio;
-            }
-            else {
-                return null;
-            }
-        },
-        deleteUserPortfolio(){
-            let portfolioTable = JSON.parse(localStorage.getItem('portfolioTable')) ? 
-                JSON.parse(localStorage.getItem('portfolioTable')): [];
-            let user = JSON.parse(localStorage.getItem('user'));
-            let userPortfolioIndex = portfolioTable ? _.findIndex(portfolioTable, (el) => {
-                return el.user == user.email;
-            }) : -1;
-            if(userPortfolioIndex != -1){
-                portfolioTable[userPortfolioIndex].portfolio = [];
-                localStorage.setItem('portfolioTable', JSON.stringify(portfolioTable));
-            }
-        },
         refreshPortfolio() {  
-            this.portfolio = this.getUserPortfolio();
+            this.portfolio = getUserPortfolio();
             this.portfolio = this.portfolio ? this.portfolio : [];       
             if(this.portfolio && this.portfolio.length > 0){
                 this.totalAmount = 0;
@@ -569,7 +572,7 @@ let PortfolioView = {
                             this.totalAmount += parseFloat(currCoinAmount) * parseFloat(response.price_usd);
                         }
                         this.totalAmount = this.totalAmount.toFixed(2);
-                        this.updateUserPortfolio(this.portfolio);
+                        updateUserPortfolio(this.portfolio);
                     },
                     (err) => { console.log(err); }
                 );
@@ -579,7 +582,7 @@ let PortfolioView = {
             }
         },
         deletePortfolio() {
-            this.deleteUserPortfolio();
+            deleteUserPortfolio();
             this.refreshPortfolio();
         }
     }
