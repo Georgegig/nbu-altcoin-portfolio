@@ -126,6 +126,7 @@ let NavigationComponent = Vue.component('nav-component', {
         <v-toolbar-side-icon class="hidden-md-and-up"></v-toolbar-side-icon>
         <span><h1 v-text="loggedUser"></h1></span>
         <v-toolbar-items class="hidden-sm-and-down">
+            <v-btn flat v-show="userLoggedIn" @click.native="portfolio()">Portfolio</v-btn>
             <v-btn flat v-show="userLoggedIn" @click.native="logout()">Log out</v-btn>
             <v-btn flat v-show="!userLoggedIn" @click.native="login()">Log in</v-btn>
             <v-btn flat v-show="!userLoggedIn" @click.native="register()">Register</v-btn>
@@ -158,6 +159,9 @@ let NavigationComponent = Vue.component('nav-component', {
         },
         register(){
             this.$router.push('/register');
+        },
+        portfolio() {
+            this.$router.push('/portfolio');
         },
         loginStatus(){
             this.userLoggedIn = userLoggedIn();
@@ -258,10 +262,10 @@ let GettingStartedView = {
         <v-parallax src="assets/section.jpg" height="380">
             <v-layout column align-center justify-center>
                 <v-layout column align-center justify-center class="white--text"> 
-                    <v-dialog v-model="dialog" persistent max-width="600">
+                    <!-- <v-dialog v-model="dialog" persistent max-width="600">
                         <v-btn color="blue" dark slot="activator">Get started right away</v-btn>
                         <login-component></login-component>
-                    </v-dialog>
+                    </v-dialog> -->
                 </v-layout>
                 </v-layout>
         </v-parallax>
@@ -313,6 +317,11 @@ let LoginView = {
                 (v) => !!v || 'E-mail is required',
                 (v) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
             ]
+        }
+    },
+    mounted(){
+        if(userLoggedIn()){
+            this.$router.push('/portfolio');
         }
     },
     methods:{
@@ -394,6 +403,11 @@ let RegisterView = {
                 (v) => !!v || 'Please repeat your password',
                 (v) => this.password == v || 'Passwords do not match'
             ]
+        }
+    },
+    mounted(){
+        if(userLoggedIn()){
+            this.$router.push('/portfolio');
         }
     },
     methods:{
@@ -494,17 +508,22 @@ let PortfolioView = {
         }
     },
     mounted(){
-        this.refreshPortfolio();
-
-        this.$http.get('https://api.coinmarketcap.com/v1/ticker/?start=0&limit=1400').then(
-            (data) => {
-                this.allCoins = data.body;
-                this.coins = this.allCoins;
-            },
-            (err) => {
-                console.log(err);
-            }
-        )
+        if(userLoggedIn()){
+            this.refreshPortfolio();
+    
+            this.$http.get('https://api.coinmarketcap.com/v1/ticker/?start=0&limit=1400').then(
+                (data) => {
+                    this.allCoins = data.body;
+                    this.coins = this.allCoins;
+                },
+                (err) => {
+                    console.log(err);
+                }
+            );
+        }
+        else {
+            this.$router.push('/');
+        }
     },
     watch: {
         filter: function(newFilter) {
