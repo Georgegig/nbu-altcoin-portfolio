@@ -108,7 +108,7 @@ let NavigationComponent = Vue.component('nav-component', {
         logout(){
             localStorage.removeItem('user');
             this.$eventHub.$emit('loginChange');
-            this.router.push('/');
+            this.$router.push('/');
         },
         register(){
             this.$router.push('/register');
@@ -508,7 +508,7 @@ let PortfolioView = {
                 JSON.parse(localStorage.getItem('portfolioTable')): [];
             let user = JSON.parse(localStorage.getItem('user'));
             let userPortfolioIndex = portfolioTable ? _.findIndex(portfolioTable, (el) => {
-                return el.user = user.email;
+                return el.user == user.email;
             }) : -1;
             if(userPortfolioIndex != -1){
                 portfolioTable[userPortfolioIndex].portfolio = newPortfolio;
@@ -525,7 +525,7 @@ let PortfolioView = {
             let portfolioTable = JSON.parse(localStorage.getItem('portfolioTable'));
             let user = JSON.parse(localStorage.getItem('user'));
             let userPortfolioIndex = portfolioTable ? _.findIndex(portfolioTable, (el) => {
-                return el.user = user.email;
+                return el.user == user.email;
             }) : -1;
             if(userPortfolioIndex != -1){
                 return portfolioTable[userPortfolioIndex].portfolio;
@@ -539,7 +539,7 @@ let PortfolioView = {
                 JSON.parse(localStorage.getItem('portfolioTable')): [];
             let user = JSON.parse(localStorage.getItem('user'));
             let userPortfolioIndex = portfolioTable ? _.findIndex(portfolioTable, (el) => {
-                return el.user = user.email;
+                return el.user == user.email;
             }) : -1;
             if(userPortfolioIndex != -1){
                 portfolioTable[userPortfolioIndex].portfolio = [];
