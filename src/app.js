@@ -100,7 +100,6 @@ let NavigationComponent = Vue.component('nav-component', {
     },
     methods: {
         homePage() {
-            debugger;
             this.$router.push('/');
         },
         login(){
@@ -271,7 +270,6 @@ let LoginView = {
     },
     methods:{
         login() {
-            debugger;
             if (this.$refs.form.validate()) {
                 this.successfulLogin = false;
                 this.unsuccessfulLogin = false;
@@ -353,7 +351,6 @@ let RegisterView = {
     },
     methods:{
         register() {
-            debugger;
             if (this.$refs.form.validate()) {
               // Native form submission is not yet supported
               let usersTable = JSON.parse(localStorage.getItem('usersTable'));
@@ -382,16 +379,29 @@ let PortfolioView = {
     <v-container grid-list-md text-xs-center>
         <v-layout row wrap>
             <v-flex xs12>
-                <v-card class="grey lighten-4">
+                <v-card class="green lighten-4">
                     <v-card-text class="px-0"><h2><b>Total amount: {{totalAmount}} USD</b></h2></v-card-text>
                 </v-card>
             </v-flex>
         </v-layout>
+        <v-layout row wrap v-for="p in portfolio" :key="p.id">
+            <v-flex xs12>
+                <v-card class="grey lighten-4">
+                    <v-card-text class="px-0"><h2><b>{{p.name}} - Amount: {{p.amount}} Price: {{p.price_usd}} USD</b></h2></v-card-text>
+                </v-card>
+            </v-flex>
+        </v-layout>
         <v-layout row justify-center>
-            <v-dialog v-model="selectCoinDialog" scrollable max-width="600px">
-                <v-btn dark fab color="blue" center slot="activator">
-                    <v-icon>add</v-icon>
-                </v-btn>
+            <v-btn dark fab color="blue" center slot="activator" v-on:click="selectCoinDialog=true">
+                <v-icon>add</v-icon>
+            </v-btn>
+            <v-btn dark fab color="blue" center v-on:click="deletePortfolio()">
+                <v-icon>delete</v-icon>
+            </v-btn>
+            <v-btn dark fab color="blue" center v-on:click="refreshPortfolio()">
+                <v-icon>refresh</v-icon>
+            </v-btn>
+            <v-dialog v-model="selectCoinDialog" scrollable max-width="600px">                
                 <v-card>
                     <v-card-title>Select Coin</v-card-title>
                     <v-divider></v-divider>
@@ -437,9 +447,7 @@ let PortfolioView = {
         }
     },
     mounted(){
-        this.portfolio = JSON.parse(localStorage.getItem('portfolio'));
-
-        this.refreshTotalAmount();
+        this.refreshPortfolio();
 
         this.$http.get('https://api.coinmarketcap.com/v1/ticker/?start=0&limit=1400').then(
             (data) => {
@@ -452,10 +460,14 @@ let PortfolioView = {
         )
     },
     watch: {
-      filter: function(newFilter) {
-          debugger;
-        this.filterCollection()
-      }
+        filter: function(newFilter) {
+            this.filterCollection();
+        },
+        addCoinDialog: function(newValue){
+            if(!newValue){
+                this.selectedCoin = {};
+            }
+        }
     },
     methods: {
         filterCollection(){
@@ -463,38 +475,68 @@ let PortfolioView = {
                 return _.includes(el.name.toLowerCase(), this.filter.toLowerCase());
             });
         },
-        addCoin(c) {
-            this.selectedCoin.name = c.name;
+        addCoin(coin) {
+            this.selectedCoin = coin;
+            delete this.selectedCoin.amount;
             this.selectCoinDialog = false;
             this.addCoinDialog = true;
         },
         selectCoin() {
-            this.selectedCoin = {};
             this.selectCoinDialog = true;
             this.addCoinDialog = false;
         },
         add() {
             if (this.$refs.form.validate()) {                
-                console.log(this.selectedCoin);
+                let coinIndex = _.findIndex(this.portfolio, (el) => {
+                    return el.id == this.selectedCoin.id;
+                });
+                if(coinIndex == -1){
+                    this.portfolio.push(this.selectedCoin);
+                }
+                else {
+                    this.portfolio[coinIndex].amount = (parseFloat(this.portfolio[coinIndex].amount) +
+                        parseFloat(this.selectedCoin.amount)).toFixed(2);
+                }
+                localStorage.setItem('portfolio', JSON.stringify(this.portfolio));
+                this.refreshPortfolio();
+                this.addCoinDialog = false;
             }
         },
-        refreshTotalAmount() {            
-            if(this.portfolio){
+        refreshPortfolio() {     
+            this.portfolio = JSON.parse(localStorage.getItem('portfolio'));
+            this.portfolio = this.portfolio ? this.portfolio : [];       
+            if(this.portfolio && this.portfolio.length > 0){
+                this.totalAmount = 0;
+                let promises = [];
                 for(var i = 0; i < this.portfolio.length; i++){
-                    this.$http.get(`https://api.coinmarketcap.com/v1/ticker/${this.portfolio[i].id}/`)
-                    .then(
-                        (data) => {
-                            debugger;
-                            let currentCoin = _.find(this.portfolio, (el) => {
-                                return el.id == data.body[0].id;
-                            })
-                            this.totalAmount += parseInt(currentCoin.amount) * parseFloat(data.body[0]["price_usd"]);
-                        },
-                        (err) => {
-                            console.log(err);
-                        });
+                    promises.push(this.$http.get(`https://api.coinmarketcap.com/v1/ticker/${this.portfolio[i].id}/`));
                 }
+                Promise.all(promises).then(
+                    (responseArray) => {
+                        for(let i = 0; i < responseArray.length; i++){
+                            let response = responseArray[i].body[0];
+                            let coinIndex = _.findIndex(this.portfolio, (el) => {
+                                return el.id == response.id;
+                            });
+                            let currentCoin = this.portfolio[coinIndex];
+                            let currCoinAmount = currentCoin.amount;
+                            this.portfolio[coinIndex] = response;
+                            this.portfolio[coinIndex].amount = currCoinAmount;
+                            this.totalAmount += parseFloat(currCoinAmount) * parseFloat(response.price_usd);
+                        }
+                        this.totalAmount = this.totalAmount.toFixed(2);
+                        localStorage.setItem('portfolio', JSON.stringify(this.portfolio));
+                    },
+                    (err) => { console.log(err); }
+                );
             }
+            else{
+                this.totalAmount = 0;
+            }
+        },
+        deletePortfolio() {
+            localStorage.removeItem('portfolio');
+            this.refreshPortfolio();
         }
     }
 }
