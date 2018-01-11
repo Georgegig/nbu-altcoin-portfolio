@@ -54,7 +54,7 @@ let LoginView = {
                         email: this.email,
                         timeStamp:  loginDate.getFullYear() + '-' + (loginDate.getMonth() + 1) + '-' + loginDate.getDate()
                     };
-                    localStorage.setItem('user', JSON.stringify(user));
+                    UsersTable.loginUser(user);
                     this.successfulLogin = true;
                     setTimeout(() => {
                         this.$router.push('/portfolio');

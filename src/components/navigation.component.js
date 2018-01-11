@@ -35,7 +35,7 @@ let NavigationComponent = Vue.component('nav-component', {
             this.$router.push('/login');
         },
         logout(){
-            localStorage.removeItem('user');
+            UsersTable.logoutUser();
             this.$eventHub.$emit('loginChange');
             this.$router.push('/');
         },

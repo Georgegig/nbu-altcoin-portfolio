@@ -52,10 +52,32 @@ let UsersTable = (function(){
         return false;
     };
 
+    let registerUser = (user) => {
+        let usersTable = JSON.parse(localStorage.getItem('usersTable'));
+        if (!usersTable){
+            usersTable = [];
+        }
+
+        usersTable.push(user);
+
+        localStorage.setItem('usersTable', JSON.stringify(usersTable));
+    };
+
+    let loginUser = (user) => {
+        localStorage.setItem('user', JSON.stringify(user));
+    };
+
+    let logoutUser = () => {
+        localStorage.removeItem('user');
+    };
+
     return {
         usersTableContainsEmail: usersTableContainsEmail,
         validateEmailAndPassword: validateEmailAndPassword,
         getUsername: getUsername,
-        userLoggedIn: userLoggedIn
+        userLoggedIn: userLoggedIn,
+        registerUser: registerUser,
+        loginUser: loginUser,
+        logoutUser: logoutUser
     }
 })();

@@ -57,18 +57,11 @@ let RegisterView = {
         register() {
             if (this.$refs.form.validate()) {
               // Native form submission is not yet supported
-              let usersTable = JSON.parse(localStorage.getItem('usersTable'));
-              if (!usersTable){
-                  usersTable = [];
-              }
-
-              usersTable.push({
-                  name: this.name,
-                  email: this.email,
-                  password: this.password
-              })
-
-              localStorage.setItem('usersTable', JSON.stringify(usersTable));
+              UsersTable.registerUser({
+                name: this.name,
+                email: this.email,
+                password: this.password
+              });
               this.$router.push('/login');
             }
           },

@@ -46,7 +46,7 @@ let PortfolioView = {
                     <v-divider></v-divider>
                     <v-card-text style="height: 500px;">
                         <v-form v-model="valid" ref="form">
-                            <v-text-field label="Amount" v-model="selectedCoin.amount" :rules="amountRules" required></v-text-field>
+                            <v-text-field label="Amount" v-model="selectedCoin.amount" type="number" :rules="amountRules" required></v-text-field>
                             <v-btn @click="add()" :disabled="!valid" color="primary" white--text><b>Add</b></v-btn>
                             <v-btn @click="selectCoin()">Go back</v-btn>
                         </v-form>
